@@ -15,7 +15,7 @@
 #define MAX_CLIENTS 50
 
 
-SSL_CTX *create_client_context_tls()
+SSL_CTX *create_client_context_tls(char *root_ca_path)
 {
     SSL_CTX *ctx;
 
@@ -32,13 +32,23 @@ SSL_CTX *create_client_context_tls()
     }
 
     // Disabilita la verifica del certificato
-    SSL_CTX_set_verify(ctx, SSL_VERIFY_NONE, NULL);
+    if (root_ca_path == NULL) {
+        SSL_CTX_set_verify(ctx, SSL_VERIFY_NONE, NULL);
+        return ctx;
+    }
+
+    if (SSL_CTX_load_verify_locations(ctx, root_ca_path, NULL) != 1) {
+            fprintf(stderr, "[!] TCP Server: Cannot laod root CA file: %s\n", root_ca_path);
+            ERR_print_errors_fp(stderr);
+            SSL_CTX_free(ctx);
+            return NULL;
+    }
 
     return ctx;
 }
 
 
-void *tcp_server(char *address, int port, int service_port)
+void *tcp_server(char *address, int port, int service_port, char *root_ca_path)
 {
         int client;
         struct sockaddr_in client_address;
@@ -73,7 +83,13 @@ void *tcp_server(char *address, int port, int service_port)
                         close_socket(tcp_server);
                         service_client = create_client("127.0.0.1", service_port);
 
-                        ctx = create_client_context_tls();
+                        ctx = create_client_context_tls(root_ca_path);
+
+                        if (ctx == NULL) {
+                                close_socket(service_client);
+                                exit(EXIT_FAILURE);
+                        }
+
                         ssl_service_client = SSL_new(ctx);
 
                         SSL_set_fd(ssl_service_client, service_client.fd);
@@ -84,6 +100,7 @@ void *tcp_server(char *address, int port, int service_port)
                                 ERR_print_errors_fp(stderr);
                                 SSL_free(ssl_service_client);
                                 SSL_CTX_free(ctx);
+                                close_socket(service_client);
                                 exit(EXIT_FAILURE);
                         }
 

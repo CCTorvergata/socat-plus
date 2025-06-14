@@ -9,11 +9,7 @@
 
 void print_usage(const char *progname) {
         fprintf(stderr,
-                "Usage: %s -t <TLS Port> -s <Service Port> [-p <TCP Port>] [-c <Cert Path>] [-k <Key Path>]\n"
-                "Defaults:\n"
-                "  TCP Port: 8080\n"
-                "  Cert Path: cert.pem\n"
-                "  Key Path:  key.pem\n",
+                "Usage: %s -t <TLS port> -s <Service port> [-p <TCP port>] [-c <Cert path>] [-k <Key path>] [-r <Root CA path]\n",
                 progname);
 }
 
@@ -24,6 +20,7 @@ int main(int argc, char *argv[]) {
         int service_port = 0;
         char *cert_path = "cert.pem";
         char *key_path  = "key.pem";
+        char *root_ca_path = NULL;
 
         int opt;
 
@@ -44,6 +41,9 @@ int main(int argc, char *argv[]) {
                         case 'k':
                                 key_path = optarg;
                                 break;
+                        case 'r':
+                                root_ca_path = optarg;
+                                break;
                         default:
                                 print_usage(argv[0]);
                                 exit(EXIT_FAILURE);
@@ -51,7 +51,7 @@ int main(int argc, char *argv[]) {
         }
 
         if (tls_port == 0 || service_port == 0) {
-                fprintf(stderr, "Error: TLS Port (-t) or Service Port (-s) are required.\n");
+                fprintf(stderr, "Error: TLS port (-t) or Service port (-s) are required.\n");
                 print_usage(argv[0]);
                 exit(EXIT_FAILURE);
         }
@@ -66,7 +66,7 @@ int main(int argc, char *argv[]) {
         }
 
         if (pid == 0) {
-                tcp_server(NULL, tcp_port, service_port);
+                tcp_server(NULL, tcp_port, service_port, root_ca_path);
         }
         
         else {
