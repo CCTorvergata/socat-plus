@@ -1,7 +1,7 @@
 #ifndef SOCKETSERVER_H
 #define SOCKETSERVER_H
 
-void tcp_server(char *address, int port, int service_port, char *root_ca_path);
-void tls_server(char *address, int port, char *cert_path, char *key_path, int tcp_server_port);
+void tcp_server(char *address, int port, void (*client_handler)(int, void *), void *handler_args);
+void tls_server(char *address, int port, void (*client_handler)(int, void *), void *handler_args);
 
 #endif

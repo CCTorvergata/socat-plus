@@ -10,10 +10,9 @@
 #include "socket_utils.h"
 #include "ssl_utils.h"
 #include "socketserver.h"
-#include "proxy_tls.h"
 
 
-void tcp_server(char *address, int port, int service_port, char *root_ca_path)
+void tcp_server(char *address, int port, void (*client_handler)(int, void *), void *handler_args)
 {
         struct sockaddr_in client_address;
         socklen_t client_len = sizeof(client_address);
@@ -41,7 +40,7 @@ void tcp_server(char *address, int port, int service_port, char *root_ca_path)
                 if (pid == 0) {
                         close_socket(tcp_server);
 
-                        tcp_client_handler(client, service_port, root_ca_path);
+                        client_handler(client, handler_args);
 
                         close(client);
                         printf("[*] TCP Server: Connection terminated.\n");
@@ -56,7 +55,7 @@ void tcp_server(char *address, int port, int service_port, char *root_ca_path)
 }
 
 
-void tls_server(char *address, int port, char *cert_path, char *key_path, int tcp_server_port)
+void tls_server(char *address, int port, void (*client_handler)(int, void *), void *handler_args)
 {
         Socket tls_server = create_server(address, port);
         printf("[*] TLS Server: Listening on port %d...\n", port);
@@ -84,7 +83,7 @@ void tls_server(char *address, int port, char *cert_path, char *key_path, int tc
                         close_socket(tls_server);
                         printf("[*] TLS Server: New connection TLS from %s\n", inet_ntoa(client_addr.sin_addr));
 
-                        tls_client_handler(client, cert_path, key_path, tcp_server_port);
+                        client_handler(client, handler_args);
 
                         close(client);
                         exit(EXIT_SUCCESS);

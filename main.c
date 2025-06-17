@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "socketserver.h"
+#include "proxy_tls.h"
 
 
 void print_usage(const char *progname) {
@@ -54,20 +54,7 @@ int main(int argc, char *argv[]) {
                 exit(EXIT_FAILURE);
         }
 
-        int pid;
+        proxy_tls(tcp_port, tls_port, service_port, cert_path, key_path, root_ca_path);
 
-        pid = fork();
-
-        if (pid == -1) {
-                perror("Error forking the process");
-                exit(EXIT_FAILURE);
-        }
-
-        if (pid == 0) {
-                tcp_server(NULL, tcp_port, service_port, root_ca_path);
-        }
-        
-        else {
-                tls_server(NULL, tls_port, cert_path, key_path, tcp_port);
-        }
+        return 0;
 }

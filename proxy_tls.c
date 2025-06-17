@@ -7,6 +7,7 @@
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 
+#include "socketserver.h"
 #include "ssl_utils.h"
 #include "socket_utils.h" 
 #include "proxy_tls.h"
@@ -51,8 +52,12 @@ void forward(SSL *ssl_socket, int socket_fd)
 }
 
 
-void tcp_client_handler(int client_fd, int service_port, char *root_ca_path)
+void tcp_client_handler(int client_fd, void *args)
 {
+        struct tcp_client_handler_args *tcp_args = (struct tcp_client_handler_args*)args;
+        int service_port = tcp_args->service_port;
+        char *root_ca_path = tcp_args->ca_cert_path;
+
         Socket service_client;
         SSL_CTX *ctx;
         SSL *ssl_service_client;
@@ -90,8 +95,13 @@ void tcp_client_handler(int client_fd, int service_port, char *root_ca_path)
 }
 
 
-void tls_client_handler(int client_fd, char *cert_path, char *key_path, int tcp_server_port)
+void tls_client_handler(int client_fd, void *args)
 {
+        struct tls_client_handler_args *tls_args = (struct tls_client_handler_args*)args;
+        int tcp_server_port = tls_args->tcp_server_port;
+        char *cert_path = tls_args->cert_path;
+        char *key_path = tls_args->key_path;
+
         SSL_CTX *ctx = create_tls_server_context(cert_path, key_path);
         SSL *ssl_client;
 
@@ -118,4 +128,35 @@ void tls_client_handler(int client_fd, char *cert_path, char *key_path, int tcp_
         SSL_CTX_free(ctx);
         EVP_cleanup();
         close_socket(client_tcp);
+}
+
+
+void proxy_tls(int tcp_port, int tls_port, int service_port, char* cert_path, char *key_path, char *ca_cert_path)
+{
+        int pid;
+
+        pid = fork();
+
+        if (pid == -1) {
+                perror("Error forking the process");
+                exit(EXIT_FAILURE);
+        }
+
+        struct tls_client_handler_args *tls_args = malloc(sizeof(struct tls_client_handler_args));
+        tls_args->cert_path = cert_path;
+        tls_args->key_path = key_path;
+        tls_args->tcp_server_port = tcp_port;
+
+        struct tcp_client_handler_args *tcp_args = malloc(sizeof(struct tcp_client_handler_args));
+        tcp_args->service_port = service_port;
+        tcp_args->ca_cert_path = ca_cert_path;
+
+
+        if (pid == 0) {
+                tcp_server("127.0.0.1", tcp_port, tcp_client_handler, tcp_args);
+        }
+        
+        else {
+                tls_server(NULL, tls_port, tls_client_handler, tls_args);
+        }
 }
