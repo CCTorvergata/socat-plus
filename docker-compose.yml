@@ -1,0 +1,5 @@
+services:
+  socat-plus:
+    build: .
+    network_mode: host
+    command: "./socat-plus -t 8443 -s 8555"
