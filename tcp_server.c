@@ -11,44 +11,11 @@
 #include <openssl/err.h>
 
 #include "common.h"
-
-#define MAX_CLIENTS 50
-
-
-SSL_CTX *create_client_context_tls(char *root_ca_path)
-{
-    SSL_CTX *ctx;
-
-    // Inizializza le librerie OpenSSL (solo una volta nel programma)
-    SSL_library_init();
-    SSL_load_error_strings();
-    OpenSSL_add_all_algorithms();
-
-    // Crea il contesto usando TLS client method
-    ctx = SSL_CTX_new(TLS_client_method());
-    if (!ctx) {
-        ERR_print_errors_fp(stderr);
-        exit(EXIT_FAILURE);
-    }
-
-    // Disabilita la verifica del certificato
-    if (root_ca_path == NULL) {
-        SSL_CTX_set_verify(ctx, SSL_VERIFY_NONE, NULL);
-        return ctx;
-    }
-
-    if (SSL_CTX_load_verify_locations(ctx, root_ca_path, NULL) != 1) {
-            fprintf(stderr, "[!] TCP Server: Cannot laod root CA file: %s\n", root_ca_path);
-            ERR_print_errors_fp(stderr);
-            SSL_CTX_free(ctx);
-            return NULL;
-    }
-
-    return ctx;
-}
+#include "ssl_utils.h"
+#include "tcp_server.h"
 
 
-void *tcp_server(char *address, int port, int service_port, char *root_ca_path)
+void tcp_server(char *address, int port, int service_port, char *root_ca_path)
 {
         int client;
         struct sockaddr_in client_address;
@@ -74,7 +41,6 @@ void *tcp_server(char *address, int port, int service_port, char *root_ca_path)
                 
                 if (pid == -1) {
                         perror("[!] TLS Server: Error forking the process!");
-                        goto exit;
                         exit(EXIT_FAILURE);
                 }
 
@@ -120,8 +86,6 @@ void *tcp_server(char *address, int port, int service_port, char *root_ca_path)
                         close(client);
                 }
         }
-exit:
-        close_socket(tcp_server);
 
-        return NULL;
+        close_socket(tcp_server);
 }

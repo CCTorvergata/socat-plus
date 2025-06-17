@@ -1,5 +1,4 @@
 #include <arpa/inet.h>
-#include <openssl/ssl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <strings.h>
@@ -129,3 +128,4 @@ void proxy(SSL *ssl_socket, int socket_fd)
                 }
         }
 }
+
