@@ -1,10 +1,8 @@
-#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "tcp_server.h"
-#include "tls_server.h"
+#include "socketserver.h"
 
 
 void print_usage(const char *progname) {

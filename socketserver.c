@@ -9,7 +9,51 @@
 
 #include "common.h"
 #include "ssl_utils.h"
-#include "tls_server.h"
+#include "socketserver.h"
+#include "proxy_tls.h"
+
+
+void tcp_server(char *address, int port, int service_port, char *root_ca_path)
+{
+        struct sockaddr_in client_address;
+        socklen_t client_len = sizeof(client_address);
+
+        Socket tcp_server = create_server(address, port);
+
+        printf("[*] TCP Server: Listening on port %d...\n", port);
+
+        while (1) {
+                int client = accept(tcp_server.fd, (struct sockaddr*)&client_address, &client_len);
+
+                if (client < 0) {
+                        perror("[*] TCP Server: accept");
+                        continue;
+                }
+
+                pid_t pid = fork();
+               
+                if (pid == -1 ) {
+                        perror("[!] TLS Server: Error forking the process!");
+                        exit(EXIT_FAILURE);
+                }
+
+
+                if (pid == 0) {
+                        close_socket(tcp_server);
+
+                        tcp_client_handler(client, service_port, root_ca_path);
+
+                        close(client);
+                        printf("[*] TCP Server: Connection terminated.\n");
+
+                        exit(EXIT_SUCCESS);
+                } else {
+                        close(client);
+                }
+        }
+
+        close_socket(tcp_server);
+}
 
 
 void tls_server(char *address, int port, char *cert_path, char *key_path, int tcp_server_port)
@@ -20,10 +64,6 @@ void tls_server(char *address, int port, char *cert_path, char *key_path, int tc
         struct sockaddr_in client_addr;
         socklen_t client_len = sizeof(client_addr);
 
-        SSL_CTX *ctx = create_tls_server_context(cert_path, key_path);
-        SSL *ssl_client;
-
-        Socket client_tcp;
 
         while (1) {
                 int client = accept(tls_server.fd, (struct sockaddr*)&client_addr, &client_len);
@@ -42,28 +82,11 @@ void tls_server(char *address, int port, char *cert_path, char *key_path, int tc
 
                 if (pid == 0) {
                         close_socket(tls_server);
-                        ssl_client = SSL_new(ctx);
-                        SSL_set_fd(ssl_client, client);
-
-                        if (SSL_accept(ssl_client) <= 0) {
-                                ERR_print_errors_fp(stderr);
-                                SSL_free(ssl_client);
-                                close(client);
-                                continue;
-                        }
-
                         printf("[*] TLS Server: New connection TLS from %s\n", inet_ntoa(client_addr.sin_addr));
-                        
-                        client_tcp = create_client("127.0.0.1", tcp_server_port);
 
-                        printf("[*] TLS Server: Successfully connected to server TCP\n");
+                        tls_client_handler(client, cert_path, key_path, tcp_server_port);
 
-                        proxy(ssl_client, client_tcp.fd);
-
-                        SSL_shutdown(ssl_client);
-                        SSL_free(ssl_client);
                         close(client);
-                        close_socket(client_tcp);
                         exit(EXIT_SUCCESS);
                 } else {
                         close(client);
@@ -71,7 +94,4 @@ void tls_server(char *address, int port, char *cert_path, char *key_path, int tc
         }
 
         close_socket(tls_server);
-        SSL_CTX_free(ctx);
-        EVP_cleanup();
 }
-
