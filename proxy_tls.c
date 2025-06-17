@@ -68,6 +68,7 @@ void tcp_client_handler(int client_fd, void *args)
 
         if (ctx == NULL) {
                 close_socket(service_client);
+		perror("[*] TCP Server: Error creating SSL context.");
                 exit(EXIT_FAILURE);
         }
 
@@ -85,11 +86,11 @@ void tcp_client_handler(int client_fd, void *args)
                 exit(EXIT_FAILURE);
         }
 
-        printf("[*] Successfully connected to the service via TLS.\n");
+        printf("[*] TCP Server: Successfully connected to the service via TLS.\n");
 
         forward(ssl_service_client, client_fd);
 
-        SSL_free(ssl_service_client);
+	SSL_free(ssl_service_client);
         SSL_shutdown(ssl_service_client);
         close_socket(service_client);
 }
