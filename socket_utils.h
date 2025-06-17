@@ -16,7 +16,5 @@ Socket create_socket(char *address, int port);
 Socket create_server(char *address, int port);
 Socket create_client(char *server_address, int port);
 int close_socket(Socket s);
-void proxy(SSL *ssl_socket, int socket_fd);
-SSL_CTX *init_tls_context(void);
 
 #endif

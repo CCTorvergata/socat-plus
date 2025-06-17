@@ -7,7 +7,7 @@
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 
-#include "common.h"
+#include "socket_utils.h"
 #include "ssl_utils.h"
 #include "socketserver.h"
 #include "proxy_tls.h"
