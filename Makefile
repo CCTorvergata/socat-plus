@@ -1,6 +1,6 @@
 CC=gcc
 LD=ld
-OUTDIR=out
+OUTDIR=build
 
 CFLAGS=-Wall -Wextra -Werror -O2
 LDFLAGS= -lssl -lcrypto
