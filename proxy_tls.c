@@ -10,7 +10,19 @@
 #include "socketserver.h"
 #include "ssl_utils.h"
 #include "socket_utils.h" 
-#include "proxy_tls.h"
+#include "proxy.h"
+
+
+struct tls_client_handler_args {
+        int tcp_server_port;
+        char *cert_path;
+        char *key_path;
+};
+
+struct tcp_client_handler_args {
+        int service_port;
+        char *ca_cert_path;
+};
 
 
 void forward(SSL *ssl_socket, int socket_fd)
