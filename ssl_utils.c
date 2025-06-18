@@ -1,6 +1,16 @@
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 
+#include "ssl_utils.h"
+
+
+const unsigned char alpn_protos[] = {
+    8, 'h', 't', 't', 'p', '/', '1', '.', '1',
+    8, 'h', 't', 't', 'p', '/', '1', '.', '0',
+    2, 'h', '2'
+};
+
+
 SSL_CTX *init_tls_context(int method_type)
 {
         SSL_library_init();
@@ -36,7 +46,7 @@ SSL_CTX *create_client_context_tls(char *root_ca_path)
                         fprintf(stderr, "[!] TCP Server: Cannot laod root CA file: %s\n", root_ca_path);
                         ERR_print_errors_fp(stderr);
                         SSL_CTX_free(ctx);
-                        exit(EXIT_FAILURE);
+                        return NULL;
                 }
         }
 
@@ -52,8 +62,25 @@ SSL_CTX *create_tls_server_context(char *cert_path, char *key_path)
             SSL_CTX_use_PrivateKey_file(ctx, key_path, SSL_FILETYPE_PEM) <= 0) {
                 ERR_print_errors_fp(stderr);
                 SSL_CTX_free(ctx);
-                exit(EXIT_FAILURE);
+                return NULL;
         }
 
         return ctx;
+}
+
+
+int alpn_select_callback(SSL *ssl, const unsigned char **out,
+                              unsigned char *outlen,
+                              const unsigned char *in, unsigned int inlen,
+                              void *arg)
+{
+        (void)ssl;
+        (void)arg;
+
+        if (SSL_select_next_proto((unsigned char **)out, outlen, in, inlen,
+                            alpn_protos, sizeof(alpn_protos)) != OPENSSL_NPN_NEGOTIATED) {
+                return SSL_TLSEXT_ERR_NOACK;
+        }
+
+        return SSL_TLSEXT_ERR_OK;
 }
