@@ -5,9 +5,9 @@ OUTDIR=build
 CFLAGS=-Wall -Wextra -Werror -O2
 LDFLAGS= -lssl -lcrypto
 
-CFILES:=$(shell ls *.c 2>/dev/null)
-HFILES:=$(shell ls *.h 2>/dev/null)
-COBJS:=$(patsubst %.c, $(OUTDIR)/%.o, $(CFILES))
+CFILES:=$(shell ls src/*.c 2>/dev/null)
+HFILES:=$(shell ls src/*.h 2>/dev/null)
+COBJS:=$(patsubst src/%.c, $(OUTDIR)/%.o, $(CFILES))
 
 TARGET=socat-plus
 
