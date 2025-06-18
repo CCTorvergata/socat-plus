@@ -26,20 +26,19 @@ SSL_CTX *init_tls_context(int method_type)
 
 SSL_CTX *create_client_context_tls(char *root_ca_path)
 {
-    SSL_CTX *ctx = init_tls_context(1);
+        SSL_CTX *ctx = init_tls_context(1);
 
-    // Disabilita la verifica del certificato
-    if (root_ca_path == NULL) {
+        // Disabilita la verifica del certificato
         SSL_CTX_set_verify(ctx, SSL_VERIFY_NONE, NULL);
-        return ctx;
-    }
 
-    if (SSL_CTX_load_verify_locations(ctx, root_ca_path, NULL) != 1) {
-            fprintf(stderr, "[!] TCP Server: Cannot laod root CA file: %s\n", root_ca_path);
-            ERR_print_errors_fp(stderr);
-            SSL_CTX_free(ctx);
-            return NULL;
-    }
+        if (root_ca_path != NULL) {
+                if (SSL_CTX_load_verify_locations(ctx, root_ca_path, NULL) != 1) {
+                        fprintf(stderr, "[!] TCP Server: Cannot laod root CA file: %s\n", root_ca_path);
+                        ERR_print_errors_fp(stderr);
+                        SSL_CTX_free(ctx);
+                        exit(EXIT_FAILURE);
+                }
+        }
 
     return ctx;
 }
