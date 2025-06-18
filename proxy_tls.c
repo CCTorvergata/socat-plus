@@ -11,6 +11,7 @@
 #include "ssl_utils.h"
 #include "socket_utils.h" 
 #include "proxy.h"
+#include "proxy_tls.h"
 
 
 struct tls_client_handler_args {
@@ -25,46 +26,7 @@ struct tcp_client_handler_args {
 };
 
 
-void forward(SSL *ssl_socket, int socket_fd)
-{
-        struct pollfd fds[2];
-        char buffer[BUFFER_SIZE + 1];
-        int ret;
-        int bytes_read;
-
-        fds[0].fd = SSL_get_fd(ssl_socket);
-        fds[0].events = POLLIN;
-        fds[1].fd = socket_fd;
-        fds[1].events = POLLIN;
-
-        while (1) {
-                ret = poll(fds, 2, -1);
-
-                if (ret < 0)
-                        break;
-
-                if (fds[0].revents & POLLIN) {
-                        bytes_read = SSL_read(ssl_socket, buffer, BUFFER_SIZE);
-
-                        if (bytes_read <= 0)
-                                break;
-
-                        write(socket_fd, buffer, bytes_read);
-                }
-
-                if (fds[1].revents & POLLIN) {
-                        bytes_read = read(socket_fd, buffer, BUFFER_SIZE);
-
-                        if (bytes_read <= 0)
-                                break;
-
-                        SSL_write(ssl_socket, buffer, bytes_read);
-                }
-        }
-}
-
-
-void tcp_client_handler(int client_fd, void *args)
+static void tcp_client_handler(int client_fd, void *args)
 {
         struct tcp_client_handler_args *tcp_args = (struct tcp_client_handler_args*)args;
         int service_port = tcp_args->service_port;
@@ -116,6 +78,12 @@ void tls_client_handler(int client_fd, void *args)
         char *key_path = tls_args->key_path;
 
         SSL_CTX *ctx = create_tls_server_context(cert_path, key_path);
+        
+        if (ctx == NULL) {
+                perror("[*] TLS Server: Error creating SSL context.");
+                exit(EXIT_FAILURE);
+        }
+
         SSL *ssl_client;
 
         Socket client_tcp;
