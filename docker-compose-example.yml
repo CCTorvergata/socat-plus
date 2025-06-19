@@ -1,0 +1,18 @@
+services:
+  socat-plus-tls:
+    build: .
+    network_mode: host
+    command: "./socat-plus -t 8443 -s 8555 -x tls -r ca-cert.pem"
+    volumes:
+      - /path/to/cert:/app/cert.pem
+      - /path/to/key:/app/key.pem
+      - /path/to/ca-cert:/app/ca-cert.pem
+
+  socat-plus-grpc:
+    build: .
+    network_mode: host
+    command: "./socat-plus -t 8443 -s 8555 -x grpc -r ca-cert.pem"
+    volumes:
+      - /path/to/cert:/app/cert.pem
+      - /path/to/key:/app/key.pem
+      - /path/to/ca-cert:/app/ca-cert.pem
