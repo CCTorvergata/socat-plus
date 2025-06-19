@@ -8,7 +8,7 @@
 
 void print_usage(const char *progname) {
         fprintf(stderr,
-                "Usage: %s -t <TLS port> -s <Service port> -x <Proxy type> [-p <TCP port>] [-c <Cert path>] [-k <Key path>] [-r <Root CA path]\n",
+                "Usage: %s -t <TLS port> -s <Service port> -x <Proxy type> [-p <TCP port>] [-c <Cert path>] [-k <Key path>] [-r <Root CA path>]\n",
                 progname);
 }
 

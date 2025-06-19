@@ -18,7 +18,7 @@ $(TARGET): $(COBJS)
 
 $(COBJS): $(HFILES)
 
-$(OUTDIR)/%.o: %.c | $(OUTDIR)
+$(OUTDIR)/%.o: src/%.c | $(OUTDIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(OUTDIR):
