@@ -2,7 +2,7 @@
 #define COMMON_H
 
 #define BUFFER_SIZE 16384
-#define MAX_CLIENTS 50
+#define MAX_CLIENTS 100
 
 #include <netinet/in.h>
 #include <openssl/ssl.h>
