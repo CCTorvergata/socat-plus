@@ -44,6 +44,9 @@ int main(int argc, char *argv[]) {
                         case 'r':
                                 root_ca_path = optarg;
                                 break;
+                        case 'x':
+                                proxy_path = optarg;
+                                break;
                         default:
                                 print_usage(argv[0]);
                                 exit(EXIT_FAILURE);
