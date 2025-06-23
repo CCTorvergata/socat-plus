@@ -79,6 +79,7 @@ static void tcp_server(char *address, int port, int service_port, char *ca_cert_
                         close(client);
 
                         printf("[*] TCP Server: Connection terminated.\n");
+                        exit(EXIT_SUCCESS);
                 } else {
                         close(client);
                 }
@@ -144,6 +145,9 @@ static void tls_server(char *address, int port, char *cert_path, char *key_path,
                         SSL_free(ssl_client);
                         close_socket(client_tcp);
                         close(client);
+
+                        printf("[*] TLS Server: Connection terminated.\n");
+                        exit(EXIT_SUCCESS);
                 } else {
                         close(client);
                 }
