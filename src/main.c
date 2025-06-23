@@ -45,7 +45,7 @@ int main(int argc, char *argv[]) {
                                 root_ca_path = optarg;
                                 break;
                         case 'x':
-                                proxy_path = optarg;
+                                proxy_type = optarg;
                                 break;
                         default:
                                 print_usage(argv[0]);
